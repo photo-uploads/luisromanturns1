@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wedding Memory Wall</title>
+<title>Lucas' Birthday and Dedication Memory Wall</title>
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -96,8 +96,7 @@ transform:scale(1.05);
 <body>
 
 <div id="monogram"><img src="DC_monogram.png"></div>
-<h1>Share Your Wedding Memories</h1>
-<p id="hashtag">#DEXtinedforCIARA</p>
+<h1>Share Your Memories</h1>
 <button id="uploadBtn">Upload Photo / Video</button>
 <input type="file" id="mobileUpload" accept="image/*,video/*" style="display:none" multiple>
 
@@ -106,7 +105,7 @@ transform:scale(1.05);
 <h2>Guest Messages</h2>
 <div id="messageForm">
 <input id="nameInput" placeholder="Your name"><br>
-<input id="messageInput" placeholder="Leave a message to the couple"><br>
+<input id="messageInput" placeholder="Leave a message to Lucas"><br>
 <button onclick="sendMessage()">Send</button>
 </div>
 <div id="messages"></div>
@@ -118,35 +117,35 @@ transform:scale(1.05);
 
 <div id="slideshow">
 <button id="closeSlideshow">Exit</button>
-<div id="slideshowTitle">Our Wedding From Your Lens</div>
+<div id="slideshowTitle">Lucas' Day From Your Lens</div>
 <div id="slideContainer"></div>
-<p id="slideshowHashtag">#DEXtinedforCIARA</p>
 <div id="slideMessages"></div>
 </div>
 
 <script>
 /* Firebase Config */
 const firebaseConfig = {
-apiKey:"AIzaSyBvKxL28dYXqxKcxyDtNMvLwLkgbOB0Pp0",
-authDomain:"weddingwall.firebaseapp.com",
-databaseURL:"https://weddingwall-default-rtdb.asia-southeast1.firebasedatabase.app",
-projectId:"weddingwall",
-storageBucket:"weddingwall.firebasestorage.app",
-messagingSenderId:"1016901723685",
-appId:"1:1016901723685:web:7d9e47da708a5837d9c1cc"
+  apiKey: "AIzaSyChlfB-MFyHIimxE8_PUcUnnfIDc-JS0Cw",
+  authDomain: "lucas-1st-bday-dedication.firebaseapp.com",
+  databaseURL: "https://lucas-1st-bday-dedication-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "lucas-1st-bday-dedication",
+  storageBucket: "lucas-1st-bday-dedication.firebasestorage.app",
+  messagingSenderId: "753623337856",
+  appId: "1:753623337856:web:36b6daa1afe326b6d38f65",
+  measurementId: "G-KD3X6VMLLV"
 };
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
 /* Admin detection */
 const params=new URLSearchParams(window.location.search);
-const isAdmin=params.get("admin")==="dc2026";
+const isAdmin=params.get("admin")==="lucasturns1";
 if(!isAdmin) document.getElementById("adminControls").style.display="none";
 
 /* Cloudinary Widget */
 const widget=cloudinary.createUploadWidget({
-cloudName:"dnahmevrw",
-uploadPreset:"wedding_upload",
+cloudName:"djldaocte",
+uploadPreset:"lucas_birthday_upload",
 maxImageFileSize:8000000,
 maxVideoFileSize:25000000
 },(error,result)=>{
@@ -172,8 +171,8 @@ for(let i=0;i<files.length;i++){
 const file=files[i];
 const formData=new FormData();
 formData.append("file",file);
-formData.append("upload_preset","wedding_upload");
-fetch("https://api.cloudinary.com/v1_1/dnahmevrw/upload",{method:"POST",body:formData})
+formData.append("upload_preset","lucas_birthday_upload");
+fetch("https://api.cloudinary.com/v1_1/djldaocte/upload",{method:"POST",body:formData})
 .then(res=>res.json())
 .then(data=>{db.ref("media").push({url:data.secure_url,type:data.resource_type,likes:0});})
 .catch(err=>console.error("Upload error:",err));
@@ -363,7 +362,7 @@ txt+=m.name+": "+m.text+"\n";
 const blob=new Blob([txt],{type:"text/plain"});
 const a=document.createElement("a");
 a.href=URL.createObjectURL(blob);
-a.download="wedding_messages.txt";
+a.download="bday_messages.txt";
 a.click();
 };
 
@@ -376,7 +375,7 @@ downloadMedia.onclick = async () => {
     }
 
     const zip = new JSZip();
-    const folder = zip.folder("Wedding_Media");
+    const folder = zip.folder("Bday_Media");
 
     // Download each file
     const promises = mediaList.map(async (m, idx) => {
@@ -394,7 +393,7 @@ downloadMedia.onclick = async () => {
     await Promise.all(promises);
 
     zip.generateAsync({type:"blob"}).then(content => {
-        saveAs(content, "Wedding_Media.zip");
+        saveAs(content, "Bday_Media.zip");
     });
 };
 </script>
