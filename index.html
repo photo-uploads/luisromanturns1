@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Memory Wall</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<style>
+body{margin:0;font-family:Inter,sans-serif;background:#fff8f0;text-align:center;}
+h1{font-family:"Great Vibes",cursive;font-size:48px;margin:10px;}
+h2{font-family:"Great Vibes",cursive;font-size:36px;margin:20px 0 10px;}
+button{background:#8FAFC6;border:none;color:white;padding:14px 22px;font-size:18px;border-radius:25px;cursor:pointer;}
+#uploadBtn{position:sticky;top:10px;z-index:100;width:90%;margin:10px auto;display:block;box-shadow:0 4px 10px rgba(0,0,0,.15);}
+#monogram img{width:120px;margin-top:20px;}
+#hashtag{
+    font-family: "Inter", sans-serif;  /* readable font */
+    font-size:20px;                     /* adjust size as needed */
+    color:#555;                         /* subtle color */
+    margin:5px 0 15px 0;
+}
+#slideshowHashtag{
+    font-family: "Inter", sans-serif;  /* readable font */
+    font-size: 20px;                   /* adjust size as needed */
+    color: #fff;                        /* white for contrast on black background */
+    margin: 10px 0;
+    text-align: center;
+}
+
+/* GALLERY */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:5px;padding:10px;}
+.media-item{position:relative;overflow:hidden;}
+.media-item img,.media-item video{
+width:100%;
+height:100%;
+object-fit:cover;
+border-radius:10px;
+background:#000;
+transition:transform .25s ease;
+}
+
+.media-item:hover img{
+transform:scale(1.05);
+}
+.like-container{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.4);border-radius:20px;padding:3px 8px;color:white;display:flex;gap:5px;align-items:center;z-index:5;}
+.delete-btn{position:absolute;top:6px;right:6px;background:none;border:none;color:white;font-size:18px;cursor:pointer;z-index:10;}
+
+/* MESSAGES */
+#messages div{text-align:center;background:#fff0f5;margin:6px auto;padding:10px;border-radius:10px;width:90%;position:relative;font-size:16px;}
+#messageForm input{width:80%;padding:12px;margin:6px;border-radius:10px;border:1px solid #ccc;font-size:16px;}
+#messageForm button{margin-top:10px;font-size:18px;}
+.divider{margin:50px auto 30px auto;width:85%;border-top:1px solid #ddd;}
+
+/* SLIDESHOW */
+#slideshow{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:black;color:white;z-index:999;overflow:hidden;}
+#slideshowTitle{
+    font-family: "Great Vibes", cursive;  /* match gallery title */
+    font-size:42px;
+    margin-top:20px;
+    text-align:center;
+}
+#slideContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-auto-rows: minmax(150px, 1fr);
+    gap: 5px;
+    width: 95%;
+    margin: auto;
+    margin-top: 25px;
+
+    /* center all media inside each grid cell */
+    align-items: center;    
+    justify-items: center;  
+}
+#slideContainer img,#slideContainer video{width:100%;height:100%;object-fit:contain;border-radius:12px;opacity:0;transition:opacity 1s ease;}
+#slideMessages{position:absolute;bottom:25px;width:100%;white-space:nowrap;font-size:26px;overflow:hidden;text-align:center;}
+#closeSlideshow{position:absolute;top:15px;right:15px;font-size:20px;}
+
+/* MOBILE ADJUSTMENTS */
+@media (max-width:768px){
+    .gallery{grid-template-columns:repeat(auto-fill,minmax(100%,1fr));gap:5px;padding:5px;}
+    .gallery img,.gallery video{width:100%;height:auto;object-fit:cover;border-radius:12px;}
+    #uploadBtn{padding:18px 24px;font-size:20px;}
+    #slideContainer{grid-template-columns:repeat(2,1fr);grid-auto-rows:200px;}
+    #slideMessages{font-size:18px;}
+    #messageForm input{width:90%;font-size:18px;}
+    #messageForm button{padding:12px 18px;font-size:20px;}
+    #adminControls button{padding:12px 16px;font-size:18px;margin:4px;}
+}
+</style>
+</head>
+<body>
+
+<div id="monogram"><img src="DC_monogram.png"></div>
+<h1>Share Your Wedding Memories</h1>
+<p id="hashtag">#DEXtinedforCIARA</p>
+<button id="uploadBtn">Upload Photo / Video</button>
+<input type="file" id="mobileUpload" accept="image/*,video/*" style="display:none" multiple>
+
+<div class="gallery" id="gallery"></div>
+<hr class="divider">
+<h2>Guest Messages</h2>
+<div id="messageForm">
+<input id="nameInput" placeholder="Your name"><br>
+<input id="messageInput" placeholder="Leave a message to the couple"><br>
+<button onclick="sendMessage()">Send</button>
+</div>
+<div id="messages"></div>
+<div id="adminControls">
+<button id="startSlideshow">Start Slideshow</button>
+<button id="downloadMessages">Download Messages</button>
+<button id="downloadMedia">Download Media</button>
+</div>
+
+<div id="slideshow">
+<button id="closeSlideshow">Exit</button>
+<div id="slideshowTitle">Our Wedding From Your Lens</div>
+<div id="slideContainer"></div>
+<p id="slideshowHashtag">#DEXtinedforCIARA</p>
+<div id="slideMessages"></div>
+</div>
+
+<script>
+/* Firebase Config */
+const firebaseConfig = {
+apiKey:"AIzaSyBvKxL28dYXqxKcxyDtNMvLwLkgbOB0Pp0",
+authDomain:"weddingwall.firebaseapp.com",
+databaseURL:"https://weddingwall-default-rtdb.asia-southeast1.firebasedatabase.app",
+projectId:"weddingwall",
+storageBucket:"weddingwall.firebasestorage.app",
+messagingSenderId:"1016901723685",
+appId:"1:1016901723685:web:7d9e47da708a5837d9c1cc"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+/* Admin detection */
+const params=new URLSearchParams(window.location.search);
+const isAdmin=params.get("admin")==="dc2026";
+if(!isAdmin) document.getElementById("adminControls").style.display="none";
+
+/* Cloudinary Widget */
+const widget=cloudinary.createUploadWidget({
+cloudName:"dnahmevrw",
+uploadPreset:"wedding_upload",
+maxImageFileSize:8000000,
+maxVideoFileSize:25000000
+},(error,result)=>{
+if(result.event==="success"){
+db.ref("media").push({url:result.info.secure_url,type:result.info.resource_type,likes:0});
+}
+});
+
+// Upload Button behavior
+const uploadBtn=document.getElementById("uploadBtn");
+uploadBtn.onclick=function(){
+if(/Mobi|Android/i.test(navigator.userAgent)){
+document.getElementById("mobileUpload").click();
+}else{
+widget.open();
+}
+}
+
+// Handle mobile gallery uploads
+document.getElementById("mobileUpload").addEventListener("change",function(event){
+const files=event.target.files;
+for(let i=0;i<files.length;i++){
+const file=files[i];
+const formData=new FormData();
+formData.append("file",file);
+formData.append("upload_preset","wedding_upload");
+fetch("https://api.cloudinary.com/v1_1/dnahmevrw/upload",{method:"POST",body:formData})
+.then(res=>res.json())
+.then(data=>{db.ref("media").push({url:data.secure_url,type:data.resource_type,likes:0});})
+.catch(err=>console.error("Upload error:",err));
+}
+});
+
+// Media Gallery
+let mediaList=[];
+db.ref("media").on("child_added",snap=>{
+const data=snap.val(); const key=snap.key;
+mediaList.push({url:data.url,type:data.type,key});
+const div=document.createElement("div");
+div.className="media-item";
+div.dataset.key=key;
+let el=data.type==="video"?document.createElement("video"):document.createElement("img");
+el.src=data.url; if(data.type==="video") el.controls=true; div.appendChild(el);
+
+// Delete button for media
+if(isAdmin){
+const del=document.createElement("button"); del.className="delete-btn"; del.innerText="🗑️";
+del.onclick=()=>{if(confirm("Delete this media?")){db.ref("media/"+key).remove();div.remove();mediaList=mediaList.filter(m=>m.key!==key)}}; div.appendChild(del);
+}
+
+// Likes
+const likeContainer=document.createElement("div"); likeContainer.className="like-container";
+const likeBtn=document.createElement("button"); likeBtn.innerText="❤️"; likeBtn.style.background="none"; likeBtn.style.border="none";
+const likeCount=document.createElement("span");
+likeBtn.onclick=()=>{
+const liked=localStorage.getItem("liked_"+key);
+if(liked){
+alert("You already liked this photo.");
+return;
+}
+
+db.ref("media/"+key+"/likes").transaction(v=>(v||0)+1);
+localStorage.setItem("liked_"+key,true);
+}
+db.ref("media/"+key+"/likes").on("value",snap=>{likeCount.innerText=snap.val()||0;});
+likeContainer.appendChild(likeBtn); likeContainer.appendChild(likeCount); div.appendChild(likeContainer);
+
+gallery.prepend(div);
+window.scrollTo({top:0,behavior:"smooth"});
+});
+
+// Sync deletion across all devices
+db.ref("media").on("child_removed",snap=>{
+const key=snap.key;
+
+mediaList=mediaList.filter(m=>m.key!==key);
+
+document.querySelectorAll(".media-item").forEach(item=>{
+if(item.dataset.key===key) item.remove();
+});
+});
+
+// Messages
+let messageList=[]; let messageKeys=[];
+function sendMessage(){
+const name=nameInput.value.trim();
+const text=messageInput.value.trim();
+
+if(!name||!text) return alert("Enter name and message");
+
+if(text.length<3){
+alert("Message too short");
+return;
+}
+
+if(text.length>120){
+alert("Keep messages under 120 characters");
+return;
+}
+
+db.ref("messages").push({name,text});
+messageInput.value="";
+}
+db.ref("messages").on("child_added",snap=>{
+const m=snap.val(); const key=snap.key;
+messageList.push(m); messageKeys.push(key);
+const div=document.createElement("div"); div.style.position="relative"; div.innerText=m.name+": "+m.text; div.style.textAlign="center";
+
+// Admin delete per message
+if(isAdmin){
+const del=document.createElement("button"); del.className="delete-btn"; del.innerText="🗑️";
+del.style.position="absolute"; del.style.top="5px"; del.style.right="5px";
+del.onclick=()=>{if(confirm("Delete this message?")){db.ref("messages/"+key).remove();div.remove(); messageList=messageList.filter((_,i)=>messageKeys[i]!==key); messageKeys=messageKeys.filter(k=>k!==key);}};
+div.appendChild(del);
+}
+
+messages.prepend(div);
+});
+
+// Slideshow Collage - Fixed, smooth timing
+const slideContainer = document.getElementById("slideContainer");
+const slideMessagesDiv = document.getElementById("slideMessages");
+let slideIndex = 0;            // start at first item
+const batchSize = 4;           // show 4 items per batch
+const slideInterval = 10000;   // 10 seconds per batch
+let slideTimer;                // global timer for setInterval
+let tickerAnimation;           // global variable for scrolling messages
+
+function showSlideBatch() {
+    if (!mediaList || mediaList.length === 0) return;
+
+    slideContainer.innerHTML = ""; // clear previous batch
+
+    // loop through batchSize items
+    for (let i = 0; i < batchSize; i++) {
+        if (mediaList.length === 0) break; // safety check
+        const idx = (slideIndex + i) % mediaList.length;
+        const item = mediaList[idx];
+
+        let el = item.type === "video" ? document.createElement("video") : document.createElement("img");
+        el.src = item.url;
+
+        if (item.type === "video") {
+            el.autoplay = true;
+            el.loop = true;
+            el.muted = true;
+        }
+
+        el.style.opacity = 0;
+
+        // fade in after fully loaded
+        if (el.complete || el.readyState >= 2) {
+            el.style.opacity = 1;
+        } else {
+            el.onload = () => el.style.opacity = 1;
+            el.onloadedmetadata = () => el.style.opacity = 1; // for videos
+        }
+
+        slideContainer.appendChild(el);
+    }
+
+    // move slideIndex forward
+    slideIndex = (slideIndex + batchSize) % mediaList.length;
+}
+
+// Start slideshow
+startSlideshow.onclick = () => {
+    if (!mediaList || mediaList.length === 0) return;
+
+    document.getElementById("slideshow").style.display = "block";
+    showSlideBatch();   // show first batch immediately
+    initTicker();       // start messages ticker
+
+    // clear previous interval if exists
+    if (slideTimer) clearInterval(slideTimer);
+    slideTimer = setInterval(showSlideBatch, slideInterval);
+};
+
+// Close slideshow
+closeSlideshow.onclick = () => {
+    document.getElementById("slideshow").style.display = "none";
+
+    // stop slideshow interval
+    if (slideTimer) clearInterval(slideTimer);
+
+    // stop ticker animation
+    if (tickerAnimation) cancelAnimationFrame(tickerAnimation);
+};
+
+/* Scrolling messages ticker */
+function initTicker(){
+slideMessagesDiv.innerHTML=""; if(messageList.length===0) return;
+let repeatedMsgs=""; messageList.forEach(m=>repeatedMsgs+=m.name+": "+m.text+" ✦ ");
+slideMessagesDiv.innerText=repeatedMsgs+repeatedMsgs;
+slideMessagesDiv.scrollLeft=0;
+if(tickerAnimation) cancelAnimationFrame(tickerAnimation);
+scrollTicker();
+}
+function scrollTicker(){slideMessagesDiv.scrollLeft+=1;
+if(slideMessagesDiv.scrollLeft>=slideMessagesDiv.scrollWidth/2) slideMessagesDiv.scrollLeft=0;
+tickerAnimation=requestAnimationFrame(scrollTicker);
+}
+
+// startSlideshow.onclick=()=>{document.getElementById("slideshow").style.display="block"; showSlide(); initTicker();}
+// closeSlideshow.onclick=()=>{document.getElementById("slideshow").style.display="none";}
+/* Download Guest Messages */
+downloadMessages.onclick=()=>{
+let txt="";
+
+messageList.forEach(m=>{
+txt+=m.name+": "+m.text+"\n";
+});
+
+const blob=new Blob([txt],{type:"text/plain"});
+const a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="wedding_messages.txt";
+a.click();
+};
+
+
+/* Download Media Links */
+downloadMedia.onclick = async () => {
+    if(mediaList.length === 0){
+        alert("No media to download!");
+        return;
+    }
+
+    const zip = new JSZip();
+    const folder = zip.folder("Wedding_Media");
+
+    // Download each file
+    const promises = mediaList.map(async (m, idx) => {
+        try {
+            const response = await fetch(m.url);
+            const blob = await response.blob();
+            // Name each file as photo_001.jpg, video_001.mp4, etc.
+            const ext = m.type === "video" ? "mp4" : "jpg";
+            folder.file(`${m.type}_${idx+1}.${ext}`, blob);
+        } catch (err) {
+            console.error("Failed to fetch media:", m.url, err);
+        }
+    });
+
+    await Promise.all(promises);
+
+    zip.generateAsync({type:"blob"}).then(content => {
+        saveAs(content, "Wedding_Media.zip");
+    });
+};
+</script>
+</body>
+</html>
