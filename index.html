@@ -4,22 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Luis' Birthday and Dedication Memory Wall</title>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <style>
-body{
+/* body{
     margin:0;
     font-family:"Nunito",sans-serif;
     background:#DEDAD7;
     color:#333;
     text-align:center;
 }
-
-h1{
+    */
+body{
+    margin:0;
+    font-family:"Nunito",sans-serif;
+    background:#DEDAD7;
+    color:#2E2E2E;
+    text-align:center;
+}
+/* h1{
     font-family:"Baloo 2",cursive;
     font-size:48px;
     font-weight:700;
@@ -57,7 +64,52 @@ button:hover{
 button:active{
     transform:translateY(0);
 }
+*/
 
+    h1{
+    font-family:"Luckiest Guy",cursive;
+    font-size:50px;
+    font-weight:400;
+    letter-spacing:1.5px;
+    line-height:1.1;
+    color:#C62828;
+    margin:12px 10px 8px;
+    text-shadow:2px 2px 0 #FFD600;
+}
+
+h2{
+    font-family:"Luckiest Guy",cursive;
+    font-size:38px;
+    font-weight:400;
+    letter-spacing:1px;
+    color:#C62828;
+    margin:24px 0 10px;
+}
+
+button{
+    background:#C62828;
+    border:none;
+    color:white;
+    padding:14px 22px;
+    font-family:"Nunito",sans-serif;
+    font-size:18px;
+    font-weight:700;
+    border-radius:24px;
+    cursor:pointer;
+    box-shadow:0 4px 0 #8E1B1B;
+    transition:transform .15s ease, background .15s ease;
+}
+
+button:hover{
+    background:#B71C1C;
+    transform:translateY(-1px);
+}
+
+button:active{
+    transform:translateY(2px);
+    box-shadow:0 2px 0 #8E1B1B;
+}
+    
 #uploadBtn{
     position:sticky;
     top:10px;
@@ -76,8 +128,8 @@ button:active{
 }
 
 #monogram img{
-    width:320px;
-    max-width:88%;
+    width:360px;
+    max-width:90%;
     height:auto;
     display:block;
     margin:10px auto 0;
@@ -131,15 +183,38 @@ transform:scale(1.05);
 }
 #messageForm input{width:80%;padding:12px;margin:6px;border-radius:10px;border:1px solid #ccc;font-size:16px;}
 #messageForm button{margin-top:10px;font-size:18px;}
-.divider{margin:50px auto 30px auto;width:85%;border-top:1px solid #ddd;}
-
+/* .divider{margin:50px auto 30px auto;width:85%;border-top:1px solid #ddd;}*/
+.divider{
+    margin:50px auto 30px;
+    width:85%;
+    height:10px;
+    border:0;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            #111 0,
+            #111 20px,
+            #FFFFFF 20px,
+            #FFFFFF 40px
+        );
+    border-radius:4px;
+}    
+.subtitle{
+    font-family:"Nunito",sans-serif;
+    font-size:18px;
+    font-weight:700;
+    color:#555555;
+    margin:0 20px 16px;
+}
 /* SLIDESHOW */
 #slideshow{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:black;color:white;z-index:999;overflow:hidden;}
 #slideshowTitle{
-    font-family:"Baloo 2",cursive;
-    font-size:42px;
-    font-weight:700;
-    line-height:1.1;
+    font-family:"Luckiest Guy",cursive;
+    font-size:44px;
+    font-weight:400;
+    letter-spacing:1.5px;
+    color:#FFFFFF;
+    text-shadow:3px 3px 0 #C62828;
     margin-top:20px;
     text-align:center;
 }
@@ -175,18 +250,24 @@ transform:scale(1.05);
 </head>
 <body>
 
-<div id="monogram"><img src="luisroman.png"></div>
-<h1>Share Your Memories</h1>
-<button id="uploadBtn">Upload Photo / Video</button>
+<div id="monogram">
+    <img src="luisroman.png" alt="Lucas First Birthday">
+</div>
+
+<h1>Lucas Turns One!</h1>
+<p class="subtitle">Race in and share your favorite photos, videos, and messages</p>
+
+<button id="uploadBtn">🏁 Upload Photo / Video</button>
+    
 <input type="file" id="mobileUpload" accept="image/*,video/*" style="display:none" multiple>
 
 <div class="gallery" id="gallery"></div>
 <hr class="divider">
-<h2>Guest Messages</h2>
+<h2>Messages for Luis</h2>
 <div id="messageForm">
 <input id="nameInput" placeholder="Your name"><br>
 <input id="messageInput" placeholder="Leave a message to Luis"><br>
-<button onclick="sendMessage()">Send</button>
+<button onclick="sendMessage()">🏎️ Send Message</button>
 </div>
 <div id="messages"></div>
 <div id="adminControls">
